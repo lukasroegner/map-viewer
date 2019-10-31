@@ -1,4 +1,8 @@
 
+# OS specific files
+.DS_Store
+Thumbs.db
+
 # Build results
 build/
 
