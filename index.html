@@ -204,7 +204,7 @@
                         if (mapLayerName.lastIndexOf('\\') !== -1) {
                             mapLayerName = mapLayerName.substr(mapLayerName.lastIndexOf('\\') + 1);
                         }
-                        layers.addOverlay(mapLayer, mapLayerName + layerObjects.length);
+                        layers.addOverlay(mapLayer, mapLayerName);
                         layerObjects.push(mapLayer);
                         
                         // Checks the buttons
