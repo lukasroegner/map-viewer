@@ -49,6 +49,118 @@
                 detectRetina: true
             });
             let layers = null;
+            let layerObjects = [];
+
+            // Defines the opacity functions
+            function decreaseOpacity() {
+                let currentLayer = null;
+                for (let i = 0; i < layerObjects.length; i++) {
+                    if (map.hasLayer(layerObjects[i])) {
+                        currentLayer = layerObjects[i];
+                    }
+                }
+                currentLayer.setOpacity(Math.max(0, currentLayer.options.opacity - 0.2));
+            };
+            function increaseOpacity() {
+                let currentLayer = null;
+                for (let i = 0; i < layerObjects.length; i++) {
+                    if (map.hasLayer(layerObjects[i])) {
+                        currentLayer = layerObjects[i];
+                    }
+                }
+                currentLayer.setOpacity(Math.min(1, currentLayer.options.opacity + 0.2));
+            }
+            function bringToFront() {
+                let currentLayer = null;
+                for (let i = 0; i < layerObjects.length; i++) {
+                    if (map.hasLayer(layerObjects[i])) {
+                        currentLayer = layerObjects[i];
+                    }
+                }
+                currentLayer.bringToFront();
+            }
+
+            // Initializes the opacity buttons
+            let increaseButtonContainer = null;
+            const IncreaseOpacityButton = L.Control.extend({
+                options: {
+                    position: 'bottomright'
+                },
+                onAdd: function (map) {
+                    increaseButtonContainer = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                    increaseButtonContainer.style.backgroundColor = 'white';
+                    increaseButtonContainer.style.width = '44px';
+                    increaseButtonContainer.style.height = '44px';
+                    increaseButtonContainer.style.backgroundImage = 'url(images/increase-opacity.svg)';
+                    increaseButtonContainer.style.backgroundRepeat = 'no-repeat';
+                    increaseButtonContainer.style.backgroundPosition = 'center center';
+                    increaseButtonContainer.style.opacity = '0';
+                    increaseButtonContainer.onclick = function(e) { increaseOpacity(); e.preventDefault(); return false;  }
+                return increaseButtonContainer;
+                }
+            });
+            map.addControl(new IncreaseOpacityButton());
+            let decreaseButtonContainer = null;
+            const DecreaseOpacityButton = L.Control.extend({
+                options: {
+                    position: 'bottomright'
+                },
+                onAdd: function (map) {
+                    decreaseButtonContainer = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                    decreaseButtonContainer.style.backgroundColor = 'white';
+                    decreaseButtonContainer.style.width = '44px';
+                    decreaseButtonContainer.style.height = '44px';
+                    decreaseButtonContainer.style.backgroundImage = 'url(images/decrease-opacity.svg)';
+                    decreaseButtonContainer.style.backgroundRepeat = 'no-repeat';
+                    decreaseButtonContainer.style.backgroundPosition = 'center center';
+                    decreaseButtonContainer.style.opacity = '0';
+                    decreaseButtonContainer.onclick = function(e) { decreaseOpacity(); e.preventDefault(); return false; }
+                return decreaseButtonContainer;
+                }
+            });
+            map.addControl(new DecreaseOpacityButton());
+            let bringToFrontButtonContainer = null;
+            const BringToFrontButton = L.Control.extend({
+                options: {
+                    position: 'bottomleft'
+                },
+                onAdd: function (map) {
+                    bringToFrontButtonContainer = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                    bringToFrontButtonContainer.style.backgroundColor = 'white';
+                    bringToFrontButtonContainer.style.width = '44px';
+                    bringToFrontButtonContainer.style.height = '44px';
+                    bringToFrontButtonContainer.style.backgroundImage = 'url(images/bring-to-front.svg)';
+                    bringToFrontButtonContainer.style.backgroundRepeat = 'no-repeat';
+                    bringToFrontButtonContainer.style.backgroundPosition = 'center center';
+                    bringToFrontButtonContainer.style.opacity = '0';
+                    bringToFrontButtonContainer.onclick = function(e) { bringToFront(); e.preventDefault(); return false; }
+                return bringToFrontButtonContainer;
+                }
+            });
+            map.addControl(new BringToFrontButton());
+
+            // Initializes the function for checking the buttons
+            function checkButtons() {
+                let activeLayers = [];
+                for (let i = 0; i < layerObjects.length; i++) {
+                    if (map.hasLayer(layerObjects[i])) {
+                        activeLayers.push(layerObjects[i]);
+                    }
+                }
+
+                // Checks if only one is selected
+                if (activeLayers.length === 1) {
+                    decreaseButtonContainer.style.opacity = '1';
+                    increaseButtonContainer.style.opacity = '1';
+                    bringToFrontButtonContainer.style.opacity = '1';
+                } else {
+                    decreaseButtonContainer.style.opacity = '0';
+                    increaseButtonContainer.style.opacity = '0';
+                    bringToFrontButtonContainer.style.opacity = '0';
+                }
+            }
+            map.on('overlayadd', function() { checkButtons(); });
+            map.on('overlayremove', function() {checkButtons(); });
 
             // Initializes the function for adding layers
             function addMapLayer() {
@@ -92,7 +204,11 @@
                         if (mapLayerName.lastIndexOf('\\') !== -1) {
                             mapLayerName = mapLayerName.substr(mapLayerName.lastIndexOf('\\') + 1);
                         }
-                        layers.addOverlay(mapLayer, mapLayerName);              
+                        layers.addOverlay(mapLayer, mapLayerName + layerObjects.length);
+                        layerObjects.push(mapLayer);
+                        
+                        // Checks the buttons
+                        checkButtons();
                     }
                 }
             }
@@ -110,7 +226,7 @@
                     container.style.backgroundImage = 'url(images/open.svg)';
                     container.style.backgroundRepeat = 'no-repeat';
                     container.style.backgroundPosition = 'center center';
-                    container.onclick = function() { addMapLayer(); }
+                    container.onclick = function(e) { addMapLayer(); e.preventDefault(); return false;  }
                 return container;
                 }
             });
