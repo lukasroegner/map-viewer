@@ -6,8 +6,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "package-mac": "electron-packager . --executableName=MapViewer --out=build/ --icon=icon.icns --platform=darwin --overwrite",
-    "package-win": "electron-packager . --executableName=MapViewer --out=build/ --icon=icon.ico --platform=win32 --overwrite"
+    "package-mac": "node node_modules/electron-packager/bin/electron-packager.js . --executableName=MapViewer --out=build/ --icon=icon.icns --platform=darwin --overwrite",
+    "package-win": "node node_modules/electron-packager/bin/electron-packager.js . --executableName=MapViewer --out=build/ --icon=icon.ico --platform=win32 --overwrite"
   },
   "author": "Lukas Rögner",
   "license": "MIT",

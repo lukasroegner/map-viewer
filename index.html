@@ -17,6 +17,15 @@
                 margin:0; 
                 padding:0; 
             }
+
+            .leaflet-control-layers-toggle {
+                background-image: url(images/layers.svg) !important;
+                background-size: contain !important;
+            }
+
+            .leaflet-control-custom {
+                cursor: pointer;
+            }
         </style>
     </head>
     <body>
@@ -30,45 +39,82 @@
             const electron = require('electron');
             const currentWindow = electron.remote.getCurrentWindow();
 
-            // Gets the map folder
-            const mapDirectories = electron.remote.dialog.showOpenDialogSync(currentWindow, { properties: ['openDirectory'] });
-            if (mapDirectories.length === 1) {
-                const mapDirectory = mapDirectories[0];
+            // Initializes the map
+            const map = L.map('map', {
+                maxZoom: 1,
+                minZoom: 1,
+                crs: L.CRS.Simple,
+                zoomControl: true,
+                attributionControl: false,
+                detectRetina: true
+            });
+            let layers = null;
 
-                // Loads the JSON file
-                const mapJson = require(mapDirectory + '/map.json');
-                if (mapJson) {
+            // Initializes the function for adding layers
+            function addMapLayer() {
+                const mapDirectories = electron.remote.dialog.showOpenDialogSync(currentWindow, { properties: ['openDirectory'] });
+                if (mapDirectories.length === 1) {
+                    const mapDirectory = mapDirectories[0];
 
-                    // Initializes the map
-                    const map = L.map('map', {
-                        maxZoom: mapJson.MaximumZoomFactor,
-                        minZoom: 1,
-                        crs: L.CRS.Simple,
-                        zoomControl: false,
-                        attributionControl: false,
-                        detectRetina: true
-                    });
+                    // Enables layers
+                    if (!layers) {
+                        layers = L.control.layers([], []).addTo(map);
+                    }
 
-                    // Sets the bounds of the map
-                    const mapBounds = new L.LatLngBounds(map.unproject([0, mapJson.Height], mapJson.MaximumZoomFactor), map.unproject([mapJson.Width, 0], mapJson.MaximumZoomFactor));
-                    map.setMaxBounds(mapBounds);
+                    // Loads the JSON file
+                    const mapJson = require(mapDirectory + '/map.json');
+                    if (mapJson) {
 
-                    // Sets the initial view
-                    map.setView(map.unproject([mapJson.Width / 2, mapJson.Height / 2], mapJson.MaximumZoomFactor), 1);
+                        // Updates the map
+                        map.setMaxZoom(mapJson.MaximumZoomFactor);
+                        map.setMaxBounds(new L.LatLngBounds(map.unproject([0, mapJson.Height], mapJson.MaximumZoomFactor), map.unproject([mapJson.Width, 0], mapJson.MaximumZoomFactor)));
 
-                    // Adds the layer
-                    L.tileLayer('file://' + mapDirectory + '/{z}/{x}-{y}.png', {
-                        minZoom: 1, 
-                        maxZoom: mapJson.MaximumZoomFactor,
-                        bounds: mapBounds,
-                        continuousWorld: true,
-                        noWrap: true,
-                        tileSize: 256,
-                        crs: L.CRS.Simple,
-                        detectRetina: false
-                    }).addTo(map);
+                        // Sets the initial view
+                        map.setView(map.unproject([mapJson.Width / 2, mapJson.Height / 2], mapJson.MaximumZoomFactor), 1);
+
+                        // Adds the layer
+                        const mapLayer = L.tileLayer('file://' + mapDirectory + '/{z}/{x}-{y}.png', {
+                            minZoom: 1, 
+                            maxZoom: mapJson.MaximumZoomFactor,
+                            bounds: new L.LatLngBounds(map.unproject([0, mapJson.Height], mapJson.MaximumZoomFactor), map.unproject([mapJson.Width, 0], mapJson.MaximumZoomFactor)),
+                            continuousWorld: true,
+                            noWrap: true,
+                            tileSize: 256,
+                            crs: L.CRS.Simple,
+                            detectRetina: false
+                        }).addTo(map);
+
+                        // Gets the name of the layer
+                        let mapLayerName = mapDirectory;
+                        if (mapLayerName.lastIndexOf('/') !== -1) {
+                            mapLayerName = mapLayerName.substr(mapLayerName.lastIndexOf('/') + 1);
+                        }
+                        if (mapLayerName.lastIndexOf('\\') !== -1) {
+                            mapLayerName = mapLayerName.substr(mapLayerName.lastIndexOf('\\') + 1);
+                        }
+                        layers.addOverlay(mapLayer, mapLayerName);              
+                    }
                 }
             }
+            
+            // Adds the add button for layers
+            const AddLayerButton = L.Control.extend({
+                options: {
+                    position: 'topright'
+                },
+                onAdd: function (map) {
+                    var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                    container.style.backgroundColor = 'white';
+                    container.style.width = '44px';
+                    container.style.height = '44px';
+                    container.style.backgroundImage = 'url(images/open.svg)';
+                    container.style.backgroundRepeat = 'no-repeat';
+                    container.style.backgroundPosition = 'center center';
+                    container.onclick = function() { addMapLayer(); }
+                return container;
+                }
+            });
+            map.addControl(new AddLayerButton());
         </script>
     </body>
 </html>

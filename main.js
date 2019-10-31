@@ -1,5 +1,5 @@
 
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 
 /**
  * Creates the window for the application.
@@ -18,6 +18,7 @@ function createWindow () {
 
     // Loads the index file
     browserWindow.loadFile('index.html');
+    Menu.setApplicationMenu(null);
 
     // Loads the DEV tools
     // browserWindow.webContents.openDevTools();
