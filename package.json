@@ -1,0 +1,18 @@
+{
+  "name": "map-viewer",
+  "productName": "Map Viewer",
+  "version": "1.0.0",
+  "description": "Viewer for tile-based maps.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package-mac": "electron-packager . --executableName=MapViewer --out=build/ --icon=icon.icns --platform=darwin --overwrite",
+    "package-win": "electron-packager . --executableName=MapViewer --out=build/ --icon=icon.ico --platform=win32 --overwrite"
+  },
+  "author": "Lukas Rögner",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^7.0.0",
+    "electron-packager": "^14.1.0"
+  }
+}
